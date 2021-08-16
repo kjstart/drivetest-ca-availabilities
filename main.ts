@@ -115,50 +115,60 @@ export async function main(options: CliOptions) {
       time: Date;
     }[] = [];
 
-    for await (const result of findAvailabilities(
-      page,
-      radius,
-      location,
-      licenseType,
-      months
-    )) {
-      if (result.type === Result.SEARCHING) {
-        logger.info(
-          "Searching %s at location %s",
-          dayjs().month(result.month).format("MMMM"),
-          result.name
-        );
-      } else if (result.type === Result.FAILED) {
-        logger.error(
-          "Couldn't search %s due to error %d:%s",
-          result.name,
-          result.error.code,
-          result.error.message
-        );
-      } else {
-        logger.info(
-          "Found new time for location %s, %s",
-          result.name,
-          dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a")
-        );
-        foundResults.push(result);
+    while (true) {
+      for await (const result of findAvailabilities(
+        page,
+        radius,
+        location,
+        licenseType,
+        months
+      )) {
+        if (result.type === Result.SEARCHING) {
+          logger.info(
+            "Searching %s at location %s",
+            dayjs().month(result.month).format("MMMM"),
+            result.name
+          );
+        } else if (result.type === Result.FAILED) {
+          logger.error(
+            "Couldn't search %s due to error %d:%s",
+            result.name,
+            result.error.code,
+            result.error.message
+          );
+        } else {
+          logger.info(
+            "Found new time for location %s, %s",
+            result.name,
+            dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a")
+          );
+          foundResults.push(result);
+        }
       }
-    }
 
-    if (foundResults.length === 0) {
-      logger.error("No timeslots found");
-    } else {
-      logger.info("Found %d available time slots:");
-      for (const result of foundResults) {
-        logger.info(
-          "• %s, %s",
-          result.name,
-          dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a")
-        );
+      if (foundResults.length === 0) {
+        logger.error("No timeslots found");
+      } else {
+        logger.info("Found %d available time slots:");
+        for (const result of foundResults) {
+          logger.info(
+            "• %s, %s",
+            result.name,
+            dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a")
+          );
+        }
       }
+      logger.info("Sleep 60000");
+      await sleep(60000);
+      logger.info("Try again");
     }
   } finally {
     browser?.close();
     logger.info('If you appreciate my work, feel free to buy me a ☕️ (coffee) here 😊: https://www.buymeacoffee.com/rushilperera')
   }
+
+  function sleep (time : number) {
+    return new Promise((resolve) => setTimeout(resolve, time));
+  }
+  
 }

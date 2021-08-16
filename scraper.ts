@@ -323,6 +323,11 @@ async function* findAvailableDates(
           ...availableBookingTimes.map(({ timeslot }) => new Date(timeslot)),
         ];
 
+        if(availableDates.length > 0){
+          logger.info("Found !");
+          await new Promise(f => setTimeout(f, 6000000));
+        }
+
         yield {
           type: Result.FOUND,
           times: availableBookingTimes.map(
@@ -356,7 +361,7 @@ export async function* findAvailabilities(
   searchRadius: number,
   currentLocation: Coordinates,
   selectedLicenseClass: LicenseClass,
-  numMonths = 6
+  numMonths = 2
 ): AsyncGenerator<
   | {
       type: Result.SEARCHING;
